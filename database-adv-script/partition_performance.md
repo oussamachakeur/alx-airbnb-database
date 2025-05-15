@@ -1,0 +1,2 @@
+SELECT * FROM bookings
+WHERE start_date BETWEEN '2024-01-01' AND '2024-03-31';
