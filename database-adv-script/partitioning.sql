@@ -1,39 +1,27 @@
--- Initial complex query retrieving bookings with user, property, and payment details
--- with WHERE and AND filters for performance testing
+-- Create a partitioned Booking table partitioned by range on start_date
+CREATE TABLE Booking_partitioned (
+    booking_id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    property_id INT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    payment_id INT,
+    -- other columns as needed
+)
+PARTITION BY RANGE (start_date);
 
-SELECT 
-    b.id AS booking_id,
-    b.start_date,
-    b.end_date,
-    u.id AS user_id,
-    u.name AS user_name,
-    p.id AS property_id,
-    p.name AS property_name,
-    pay.id AS payment_id,
-    pay.amount,
-    pay.status AS payment_status
-FROM bookings b
-JOIN users u ON b.user_id = u.id
-JOIN properties p ON b.property_id = p.id
-JOIN payments pay ON b.payment_id = pay.id
-WHERE b.status = 'confirmed'
-AND pay.status = 'completed';
+-- Create partitions for specific date ranges
+CREATE TABLE Booking_2023 PARTITION OF Booking_partitioned
+    FOR VALUES FROM ('2023-01-01') TO ('2024-01-01');
 
--- Analyze the performance of the initial query
-EXPLAIN ANALYZE
-SELECT 
-    b.id AS booking_id,
-    b.start_date,
-    b.end_date,
-    u.id AS user_id,
-    u.name AS user_name,
-    p.id AS property_id,
-    p.name AS property_name,
-    pay.id AS payment_id,
-    pay.amount,
-    pay.status AS payment_status
-FROM bookings b
-JOIN users u ON b.user_id = u.id
+CREATE TABLE Booking_2024_Q1 PARTITION OF Booking_partitioned
+    FOR VALUES FROM ('2024-01-01') TO ('2024-04-01');
+
+CREATE TABLE Booking_2024_Q2 PARTITION OF Booking_partitioned
+    FOR VALUES FROM ('2024-04-01') TO ('2024-07-01');
+
+-- Add more partitions as needed...
+
 JOIN properties p ON b.property_id = p.id
 JOIN payments pay ON b.payment_id = pay.id
 WHERE b.status = 'confirmed'
